@@ -1,0 +1,5 @@
+find_package( OpenCV REQUIRED)
+include_directories(${OpenCV_INCLUDE_DIRS})
+add_subdirectory(lib/pybind11)
+pybind11_add_module(captoarray src/captoarray.cpp)
+target_link_libraries( captoarray PRIVATE ${OpenCV_LIBS} )
