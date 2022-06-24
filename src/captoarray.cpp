@@ -52,29 +52,23 @@ std::vector<py::array_t<uint8_t>> cap_to_array(char *path, int target) {
   auto t2 = high_resolution_clock::now();
   std::cout << duration_cast<milliseconds>(t2 - t1).count() << "ms\n";
   std::vector<py::array_t<uint8_t>> arr;
-  for (size_t i = 0; i < target; i++) {
-    arr.push_back(py::array_t<uint8_t>(
-          { 1080, 1920, 3 },
-          {
-             sizeof(uint8_t) * 3 * frameWidth,
-             sizeof(uint8_t) * 3,
-             sizeof(uint8_t)
-           }
-           ));
-    //std: sizeof(uint8_t)                  :cout << i << std::endl;
+  py::capsule frames_handle([](){});
+  for (size_t i = 0; i < target; i++)
+  {
+    //std::cout << i << std::endl;
     //std::cout << sizeof(std::vector<int>) + (sizeof(int) * arr.size()) << std::endl;
-    //arr.push_back(py::array(py::buffer_info(
-    //        frames[i],
-    //        sizeof(uint8_t),
-    //        py::format_descriptor<uint8_t>::format(),
-    //        3,
-    //        { frameHeight, frameWidth, 3 },
-    //        {
-    //          sizeof(uint8_t) * 3 * frameWidth,
-    //          sizeof(uint8_t) * 3,
-    //          sizeof(uint8_t)
-    //        }
-    //      )));
+    arr.push_back(py::array(py::buffer_info(
+            frames[i],
+            sizeof(uint8_t),
+            py::format_descriptor<uint8_t>::format(),
+            3,
+            { frameHeight, frameWidth, 3 },
+            {
+              sizeof(uint8_t) * 3 * frameWidth,
+              sizeof(uint8_t) * 3,
+              sizeof(uint8_t)
+            }
+          ), frames_handle));
   }
   std::cout << "arr assigned\n";
   auto t3 = high_resolution_clock::now();
