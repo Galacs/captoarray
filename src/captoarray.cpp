@@ -10,10 +10,17 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <chrono>
 
 namespace py = pybind11;
 
 std::vector<py::array_t<uint8_t>> cap_to_array(char *path, int target) {
+  using std::chrono::high_resolution_clock;
+  using std::chrono::duration_cast;
+  using std::chrono::duration;
+  using std::chrono::milliseconds;
+  
+  auto t1 = high_resolution_clock::now();
 
   cv::VideoCapture cap(path);
   int frameCount = cap.get(CV_CAP_PROP_FRAME_COUNT);
@@ -42,25 +49,36 @@ std::vector<py::array_t<uint8_t>> cap_to_array(char *path, int target) {
       cv::waitKey(0);
     }*/
   std::cout << "frames populated\n";
+  auto t2 = high_resolution_clock::now();
+  std::cout << duration_cast<milliseconds>(t2 - t1).count() << "ms\n";
   std::vector<py::array_t<uint8_t>> arr;
-  for (size_t i = 0; i < target; i++)
-  {
-    //std::cout << i << std::endl;
+  for (size_t i = 0; i < target; i++) {
+    arr.push_back(py::array_t<uint8_t>(
+          { 1080, 1920, 3 },
+          {
+             sizeof(uint8_t) * 3 * frameWidth,
+             sizeof(uint8_t) * 3,
+             sizeof(uint8_t)
+           }
+           ));
+    //std: sizeof(uint8_t)                  :cout << i << std::endl;
     //std::cout << sizeof(std::vector<int>) + (sizeof(int) * arr.size()) << std::endl;
-    arr.push_back(py::array(py::buffer_info(
-            frames[i],
-            sizeof(uint8_t),
-            py::format_descriptor<uint8_t>::format(),
-            3,
-            { frameHeight, frameWidth, 3 },
-            {
-              sizeof(uint8_t) * 3 * frameWidth,
-              sizeof(uint8_t) * 3,
-              sizeof(uint8_t)
-            }
-          )));
+    //arr.push_back(py::array(py::buffer_info(
+    //        frames[i],
+    //        sizeof(uint8_t),
+    //        py::format_descriptor<uint8_t>::format(),
+    //        3,
+    //        { frameHeight, frameWidth, 3 },
+    //        {
+    //          sizeof(uint8_t) * 3 * frameWidth,
+    //          sizeof(uint8_t) * 3,
+    //          sizeof(uint8_t)
+    //        }
+    //      )));
   }
   std::cout << "arr assigned\n";
+  auto t3 = high_resolution_clock::now();
+  std::cout << duration_cast<milliseconds>(t3 - t2).count() << "ms\n";
   return arr;
 }
 PYBIND11_MODULE(captoarray, m)
