@@ -52,24 +52,25 @@ std::vector<py::array_t<uint8_t>> cap_to_array(char *path, int target) {
   auto t2 = high_resolution_clock::now();
   std::cout << duration_cast<milliseconds>(t2 - t1).count() << "ms\n";
   std::vector<py::array_t<uint8_t>> arr;
-  py::capsule frames_handle([](){});
+
+  py::capsule frames_handle(&arr, [](void* arr){
+    std::cout << "called\n";
+  });
+
   for (size_t i = 0; i < target; i++)
   {
-    //std::cout << i << std::endl;
-    //std::cout << sizeof(std::vector<int>) + (sizeof(int) * arr.size()) << std::endl;
-    arr.push_back(py::array(py::buffer_info(
-            frames[i],
-            sizeof(uint8_t),
-            py::format_descriptor<uint8_t>::format(),
-            3,
-            { frameHeight, frameWidth, 3 },
-            {
-              sizeof(uint8_t) * 3 * frameWidth,
-              sizeof(uint8_t) * 3,
-              sizeof(uint8_t)
-            }
-          ), frames_handle));
+    arr.push_back(py::array_t<uint8_t>(
+                            { frameHeight, frameWidth, 3 },
+                            {
+                              sizeof(uint8_t) * 3 * frameWidth,
+                              sizeof(uint8_t) * 3,
+                              sizeof(uint8_t)
+                            },
+                            frames[i],
+                            frames_handle));
   }
+
+
   std::cout << "arr assigned\n";
   auto t3 = high_resolution_clock::now();
   std::cout << duration_cast<milliseconds>(t3 - t2).count() << "ms\n";
@@ -77,5 +78,5 @@ std::vector<py::array_t<uint8_t>> cap_to_array(char *path, int target) {
 }
 PYBIND11_MODULE(captoarray, m)
 {
-  m.def("cap_to_array", &cap_to_array, py::return_value_policy::reference);
+  m.def("cap_to_array", &cap_to_array, py::return_value_policy::copy);
 }
