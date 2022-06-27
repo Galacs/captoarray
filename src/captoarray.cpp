@@ -38,8 +38,8 @@ std::vector<py::array_t<uint8_t>> cap_to_array(char *path, int target) {
   cv::Mat black_image(frameHeight, frameWidth, CV_8UC3, cv::Scalar(0, 0, 0));
   for (size_t i = frameCount; i < target; i++)
   {
-    frames[i] = new uint8_t[frameCount*frameWidth*3];
-    memcpy(frames[i], black_image.data, frameCount*frameWidth*3);
+    frames[i] = new uint8_t[frameHeight*frameWidth*3];
+    memcpy(frames[i], black_image.data, frameHeight*frameWidth*3);
   }
   cap.release();
 
