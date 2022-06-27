@@ -29,13 +29,11 @@ std::vector<py::array_t<uint8_t>> cap_to_array(char *path, int target) {
   uint8_t** frames = new uint8_t *[target];
   for (size_t i = 0; i < frameCount; i++)
   {
-    auto buffer = new uint8_t[frameHeight*frameWidth*3];
-    cv::Mat frame(frameHeight, frameWidth, CV_8UC3, buffer, 1920*3);
-    bool ret = cap.read(frame);
+    frames[i] = new uint8_t[frameHeight*frameWidth*3];
+    bool ret = cap.read(cv::Mat(frameHeight, frameWidth, CV_8UC3, frames[i]));
     if(!ret) {
-      std::cerr << "frame missing\n";
+      std::cerr << "frame " << i << " missing\n";
     }
-    frames[i] = buffer;
   }
   cv::Mat black_image(frameHeight, frameWidth, CV_8UC3, cv::Scalar(0, 0, 0));
   for (size_t i = frameCount; i < target; i++)
