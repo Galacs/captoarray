@@ -8,19 +8,18 @@
 #include <opencv2/highgui/highgui.hpp>
 
 #include <iostream>
-#include <string>
 #include <vector>
-#include <chrono>
+// #include <chrono>
 
 namespace py = pybind11;
 
 std::vector<py::array_t<uint8_t>> cap_to_array(char *path, int target) {
-  using std::chrono::high_resolution_clock;
-  using std::chrono::duration_cast;
-  using std::chrono::duration;
-  using std::chrono::milliseconds;
+  // using std::chrono::high_resolution_clock;
+  // using std::chrono::duration_cast;
+  // using std::chrono::duration;
+  // using std::chrono::milliseconds;
   
-  auto t1 = high_resolution_clock::now();
+  // auto t1 = high_resolution_clock::now();
 
   cv::VideoCapture cap(path);
   int frameCount = cap.get(CV_CAP_PROP_FRAME_COUNT);
@@ -30,32 +29,28 @@ std::vector<py::array_t<uint8_t>> cap_to_array(char *path, int target) {
   uint8_t** frames = new uint8_t *[target];
   for (size_t i = 0; i < frameCount; i++)
   {
-    cv::Mat frame;
+    auto buffer = new uint8_t[frameHeight*frameWidth*3];
+    cv::Mat frame(frameHeight, frameWidth, CV_8UC3, buffer, 1920*3);
     bool ret = cap.read(frame);
-    frames[i] = frame.data;
-    frame.addref();
+    if(!ret) {
+      std::cerr << "frame missing\n";
+    }
+    frames[i] = buffer;
   }
   cv::Mat black_image(frameHeight, frameWidth, CV_8UC3, cv::Scalar(0, 0, 0));
   for (size_t i = frameCount; i < target; i++)
   {
-    frames[i] = black_image.data;
+    frames[i] = new uint8_t[frameCount*frameWidth*3];
+    memcpy(frames[i], black_image.data, frameCount*frameWidth*3);
   }
-  black_image.addref();
+  cap.release();
 
-    /*for(size_t i = 10; i < 300; i++) {
-      cv::Mat d(1080, 1920, CV_8UC3, frames[i]);
-      std::cout << i << "\n";
-      cv::imshow("ok i pull up", d);
-      cv::waitKey(0);
-    }*/
-  std::cout << "frames populated\n";
-  auto t2 = high_resolution_clock::now();
-  std::cout << duration_cast<milliseconds>(t2 - t1).count() << "ms\n";
+  // std::cout << "frames populated\n";
+  // auto t2 = high_resolution_clock::now();
+  // std::cout << duration_cast<milliseconds>(t2 - t1).count() << "ms\n";
+
+
   std::vector<py::array_t<uint8_t>> arr;
-
-  py::capsule frames_handle(&arr, [](void* arr){
-    std::cout << "called\n";
-  });
 
   for (size_t i = 0; i < target; i++)
   {
@@ -67,16 +62,16 @@ std::vector<py::array_t<uint8_t>> cap_to_array(char *path, int target) {
                               sizeof(uint8_t)
                             },
                             frames[i],
-                            frames_handle));
+                            py::capsule(frames[i], [](void *f) { free(f); }
+                            )));
   }
 
-
-  std::cout << "arr assigned\n";
-  auto t3 = high_resolution_clock::now();
-  std::cout << duration_cast<milliseconds>(t3 - t2).count() << "ms\n";
+  // std::cout << "arr assigned\n";
+  // auto t3 = high_resolution_clock::now();
+  // std::cout << duration_cast<milliseconds>(t3 - t2).count() << "ms\n";
   return arr;
 }
 PYBIND11_MODULE(captoarray, m)
 {
-  m.def("cap_to_array", &cap_to_array, py::return_value_policy::copy);
+  m.def("cap_to_array", &cap_to_array, py::return_value_policy::take_ownership);
 }
