@@ -122,7 +122,7 @@ class CMakeBuild(build_ext):
 # logic and declaration, and simpler if you include description/version in a file.
 setup(
     name="captoarray",
-    version="0.0.1",
+    version="0.1.1",
     author="Rémi Ait-Younes",
     author_email="remi@ait-younes.fr",
     description="Python module to convert video to numpy arrays",
